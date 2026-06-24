@@ -78,3 +78,25 @@ def spacy_tokenizer2(text):
     print(f"Macro F1: {results2d[best]['macro_f1']:.4f}")
     print("", results2d[best]["report"])
 ```
+
+## 3a
+
+### Setting up Ollama
+
+1. **Install Ollama**:
+    Download from [ollama.com/download](https://ollama.com/download) and open the app.
+
+2. **Download the model**:
+
+   ```bash
+   ollama pull gemma3
+   ```
+
+3. **Verify the server is running**:
+
+    ```bash
+    curl http://localhost:11434/api/generate \
+      -d '{"model": "gemma3", "prompt": "Say hello, I am here", "stream": false}'
+    ```
+
+   A JSON response means it is working.
