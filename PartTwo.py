@@ -1,9 +1,22 @@
 import pandas as pd
+import spacy
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
 from sklearn.metrics import classification_report, f1_score
+
+nlp = spacy.load("en_core_web_sm", disable=["parser", "ner"])
+
+
+def spacy_tokenizer(text):
+    doc = nlp(text)
+    return [
+        token.lemma_.lower()
+        for token in doc
+        if not token.is_stop
+        and token.is_alpha
+    ]
 
 
 def clean_data(csv="texts/hansard10000.csv"):
@@ -56,3 +69,10 @@ if __name__ == "__main__":
         print(f"\n=== {name} ===\n")
         print(f"Macro F1: {metrics['macro_f1']:.4f}")
         print("", metrics["report"])
+
+    results2d = train_and_evaluate(df, TfidfVectorizer(tokenizer=spacy_tokenizer, max_features=3000, token_pattern=None)) # type: ignore[arg-type]
+    print("\n\n=== 2d ===\n")
+    best = max(results2d, key=lambda k: results2d[k]["macro_f1"])
+    print(f"\n=== Best classifier: {best} ===\n")
+    print(f"Macro F1: {results2d[best]['macro_f1']:.4f}")
+    print("", results2d[best]["report"])
