@@ -40,10 +40,19 @@ def train_and_evaluate(df, vectorizer):
 
 if __name__ == "__main__":
     df = clean_data()
+    print("\n\n=== 2a ===\n")
     print(df.shape)
 
-    results = train_and_evaluate(df, TfidfVectorizer(stop_words='english', max_features=3000))
-    for name, metrics in results.items():
-        print(f"=== {name} ===")
+    results2b = train_and_evaluate(df, TfidfVectorizer(stop_words='english', max_features=3000))
+    print("\n\n=== 2b ===\n")
+    for name, metrics in results2b.items():
+        print(f"\n=== {name} ===\n")
         print(f"Macro F1: {metrics['macro_f1']:.4f}")
-        print(metrics["report"])
+        print("", metrics["report"])
+
+    results2c = train_and_evaluate(df, TfidfVectorizer(stop_words='english', max_features=3000, ngram_range=(1,3)))
+    print("\n\n=== 2c ===\n")
+    for name, metrics in results2c.items():
+        print(f"\n=== {name} ===\n")
+        print(f"Macro F1: {metrics['macro_f1']:.4f}")
+        print("", metrics["report"])
