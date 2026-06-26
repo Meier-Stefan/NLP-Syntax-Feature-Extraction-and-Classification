@@ -68,6 +68,11 @@ def parse(df, store_path=Path.cwd() / "outputs", out_name="parsed.pickle"):
     return df
 
 
+def load_parsed_df(path=Path.cwd() / "outputs" / "parsed.pickle"):
+    """Loads the parsed dataframe from a pickle file."""
+    return pd.read_pickle(path)
+
+
 def nltk_ttr(text):
     """Calculates the type-token ratio of a text. Text is tokenized using nltk.word_tokenize."""
     tokens = nltk.word_tokenize(text)
@@ -101,14 +106,21 @@ def get_fks(df):
 
 
 if __name__ == "__main__":
-    path = Path.cwd() / "texts" / "novels"
-    df = read_novels(path)
-    print(df)
+    novels_path = Path.cwd() / "texts" / "novels"
+    pickle_path = Path.cwd() / "outputs" / "parsed.pickle"
+
+    if pickle_path.exists():
+        df = load_parsed_df(pickle_path)
+        print(df[["title", "author", "year"]])
+    else:
+        df = read_novels(novels_path)
+        print(df)
+        print("\nParsing texts with spaCy...")
+        parse(df)
+
+    print(f"\nColumns: {list(df.columns)}")
+    print(f"Tokens in first doc: {len(df['doc'].iloc[0])}")
+
     print("\nType-token ratios:")
     for title, ttr in get_ttrs(df).items():
         print(f"  {title}: {ttr:.4f}")
-
-    print("\nParsing texts with spaCy...")
-    parse(df)
-    print(f"Parsed {len(df)} documents. Columns: {list(df.columns)}")
-    print(f"Tokens in first doc: {len(df['doc'].iloc[0])}")
