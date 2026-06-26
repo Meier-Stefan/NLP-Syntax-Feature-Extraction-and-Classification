@@ -112,7 +112,7 @@ def get_common_subjects(doc, n=10):
     return counts.most_common(n)
 
 
-def get_he_verb_pmi(doc, n=10):
+def get_subject_verb_pmi(doc, subject, n=10):
     pairs = []
     for token in doc:
         if token.dep_ in ("nsubj", "nsubjpass") and token.head.pos_ == "VERB":
@@ -126,15 +126,15 @@ def get_he_verb_pmi(doc, n=10):
         return []
 
     verb_counts = Counter(verb for _, verb in pairs)
-    he_count = sum(1 for s, _ in pairs if s == "he")
-    if he_count == 0:
+    subj_count = sum(1 for s, _ in pairs if s == subject)
+    if subj_count == 0:
         return []
 
-    he_verb_counts = Counter(verb for s, verb in pairs if s == "he")
+    subj_verb_counts = Counter(verb for s, verb in pairs if s == subject)
     results = []
-    for verb, he_c in he_verb_counts.items():
+    for verb, subj_c in subj_verb_counts.items():
         v_c = verb_counts[verb]
-        pmi = math.log2((he_c * N) / (v_c * he_count))
+        pmi = math.log2((subj_c * N) / (v_c * subj_count))
         results.append((verb, round(pmi, 4)))
 
     results.sort(key=lambda x: x[1], reverse=True)
@@ -171,7 +171,14 @@ if __name__ == "__main__":
 
     print("\nVerbs with highest PMI with subject 'he':\n")
     for _, row in df.iterrows():
-        verbs = get_he_verb_pmi(row["doc"], n=10)
+        verbs = get_subject_verb_pmi(row["doc"], "he", n=10)
+        print(f"=== {row['title']} ===")
+        for verb, pmi in verbs:
+            print(f"    {verb}: {pmi}")
+
+    print("\nVerbs with highest PMI with subject 'she':\n")
+    for _, row in df.iterrows():
+        verbs = get_subject_verb_pmi(row["doc"], "she", n=10)
         print(f"=== {row['title']} ===")
         for verb, pmi in verbs:
             print(f"    {verb}: {pmi}")
