@@ -1,6 +1,7 @@
 from collections import Counter
 import math
 import nltk
+import re
 import spacy
 import sys
 from pathlib import Path
@@ -10,20 +11,6 @@ import pandas as pd
 nlp = spacy.load("en_core_web_sm")
 nlp.max_length = 2000000
 
-
-
-def fk_level(text, d):
-    """Returns the Flesch-Kincaid Grade Level of a text (higher grade is more difficult).
-    Requires a dictionary of syllables per word.
-
-    Args:
-        text (str): The text to analyze.
-        d (dict): A dictionary of syllables per word.
-
-    Returns:
-        float: The Flesch-Kincaid Grade Level of the text. (higher grade is more difficult)
-    """
-    pass
 
 
 def count_syl(word, d):
@@ -37,7 +24,32 @@ def count_syl(word, d):
     Returns:
         int: The number of syllables in the word.
     """
-    pass
+    word = word.lower()
+    if word in d:
+        pronunciations = d[word]
+        phones = pronunciations[0]
+        return sum(1 for p in phones if p[-1].isdigit())
+    return max(1, len(re.findall(r"[aeiouy]+", word)))
+
+
+def fk_level(text, d):
+    """Returns the Flesch-Kincaid Grade Level of a text (higher grade is more difficult).
+    Requires a dictionary of syllables per word.
+
+    Args:
+        text (str): The text to analyze.
+        d (dict): A dictionary of syllables per word.
+
+    Returns:
+        float: The Flesch-Kincaid Grade Level of the text. (higher grade is more difficult)
+    """
+    sentences = nltk.sent_tokenize(text)
+    words = nltk.word_tokenize(text)
+    words = [w for w in words if w.isalpha()]
+    if not words or not sentences:
+        return 0.0
+    total_syllables = sum(count_syl(w, d) for w in words)
+    return 206.835 - 1.015 * (len(words) / len(sentences)) - 84.6 * (total_syllables / len(words))
 
 
 
@@ -171,6 +183,10 @@ if __name__ == "__main__":
     for title, ttr in get_ttrs(df).items():
         print(f"  {title}: {ttr:.4f}")
 
+    print("\nFlesch-Kincaid Reading Ease Score:")
+    for title, score in get_fks(df).items():
+        print(f"  {title}: {score}")
+
     print("\nMost common syntactic subjects:\n")
     for _, row in df.iterrows():
         subjects = get_common_subjects(row["doc"], n=10)
@@ -178,19 +194,19 @@ if __name__ == "__main__":
         for word, count in subjects:
             print(f"    {word}: {count}")
 
-    print("\nVerbs with highest PMI with subject 'he':\n")
+    print("\nVerbs with highest PMI for subject 'he':")
     for _, row in df.iterrows():
         verbs = get_subject_verb_pmi(row["doc"], "he", n=10)
         print(f"=== {row['title']} ===")
         for verb, pmi in verbs:
-            print(f"    {verb}: {pmi}")
+            print(f"    {verb}: {pmi:.4f}")
 
-    print("\nVerbs with highest PMI with subject 'she':\n")
+    print("\nVerbs with highest PMI for subject 'she':")
     for _, row in df.iterrows():
         verbs = get_subject_verb_pmi(row["doc"], "she", n=10)
         print(f"=== {row['title']} ===")
         for verb, pmi in verbs:
-            print(f"    {verb}: {pmi}")
+            print(f"    {verb}: {pmi:.4f}")
 
     sys.stdout = old_stdout
     f.close()
