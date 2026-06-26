@@ -1,3 +1,5 @@
+import sys
+from pathlib import Path
 import pandas as pd
 import requests
 from sklearn.model_selection import train_test_split
@@ -129,7 +131,15 @@ def get_examples(train_df, parties, seed):
     return examples
 
 
+from io_utils import _Tee
+
 if __name__ == "__main__":
+    out = Path.cwd() / "outputs" / "PartThreeOutput.txt"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    f = open(out, "w")
+    old_stdout = sys.stdout
+    sys.stdout = _Tee(f)
+
     df = clean_data()
     parties = get_parties(df)
 
@@ -163,3 +173,6 @@ if __name__ == "__main__":
         print(f"--- seed={seed} results ---\n")
         print(f"Macro F1: {results_few[str(seed)]['macro_f1']:.4f}")
         print(results_few[str(seed)]["report"])
+
+    sys.stdout = old_stdout
+    f.close()

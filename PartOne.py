@@ -2,6 +2,7 @@ from collections import Counter
 import math
 import nltk
 import spacy
+import sys
 from pathlib import Path
 import pandas as pd
 
@@ -142,7 +143,15 @@ def get_subject_verb_pmi(doc, subject, n=10):
 
 
 
+from io_utils import _Tee
+
 if __name__ == "__main__":
+    out = Path.cwd() / "outputs" / "PartOneOutput.txt"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    f = open(out, "w")
+    old_stdout = sys.stdout
+    sys.stdout = _Tee(f)
+
     novels_path = Path.cwd() / "texts" / "novels"
     pickle_path = Path.cwd() / "outputs" / "parsed.pickle"
 
@@ -182,3 +191,6 @@ if __name__ == "__main__":
         print(f"=== {row['title']} ===")
         for verb, pmi in verbs:
             print(f"    {verb}: {pmi}")
+
+    sys.stdout = old_stdout
+    f.close()

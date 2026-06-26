@@ -1,3 +1,5 @@
+import sys
+from pathlib import Path
 import pandas as pd
 import spacy
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -51,7 +53,15 @@ def train_and_evaluate(df, vectorizer):
     return results
 
 
+from io_utils import _Tee
+
 if __name__ == "__main__":
+    out = Path.cwd() / "outputs" / "PartTwoOutput.txt"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    f = open(out, "w")
+    old_stdout = sys.stdout
+    sys.stdout = _Tee(f)
+
     df = clean_data()
     print("\n\n=== 2a ===\n")
     print(df.shape)
@@ -76,3 +86,6 @@ if __name__ == "__main__":
     print(f"\n=== Best classifier: {best} ===\n")
     print(f"Macro F1: {results2d[best]['macro_f1']:.4f}")
     print("", results2d[best]["report"])
+
+    sys.stdout = old_stdout
+    f.close()
