@@ -1,10 +1,7 @@
-#NLP assessment template 2026
-
-# Note: The template functions here and the dataframe format for structuring your solution is a suggested but not mandatory approach. You can use a different approach if you like, as long as you clearly answer the questions and communicate your answers clearly.
-
 import nltk
 import spacy
 from pathlib import Path
+import pandas as pd
 
 
 nlp = spacy.load("en_core_web_sm")
@@ -40,10 +37,22 @@ def count_syl(word, d):
     pass
 
 
+
+
 def read_novels(path=Path.cwd() / "texts" / "novels"):
     """Reads texts from a directory of .txt files and returns a DataFrame with the text, title,
     author, and year"""
-    pass
+
+    rows = []
+
+    for file_path in Path(path).glob("*.txt"):
+        stem = file_path.stem
+        raw_title, author, year = stem.split("-")
+        title = raw_title.replace("_", " ")
+        text = file_path.read_text(encoding="utf-8")
+        rows.append({"text": text, "title": title, "author": author, "year": int(year)})
+    df = pd.DataFrame(rows)
+    return df
 
 
 def parse(df, store_path=Path.cwd() / "pickles", out_name="parsed.pickle"):
@@ -79,17 +88,6 @@ def get_fks(df):
 
 
 if __name__ == "__main__":
-    """
-    uncomment the following lines to run the functions once you have completed them
-    """
-    # path = Path.cwd() / "texts" / "novels"
-    # print(path)
-    # df = read_novels(path) # this line will fail until you have completed the read_novels function above.
-    # print(df.head())
-    # nltk.download("cmudict")
-    # parse(df)
-    # print(df.head())
-    # print(get_ttrs(df))
-    # print(get_fks(df))
-    # df = pd.read_pickle(Path.cwd() / "pickles" /"name.pickle")
-    # call functions for part (e) here.
+    path = Path.cwd() / "texts" / "novels"
+    df = read_novels(path)
+    print(df)
