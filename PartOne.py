@@ -52,6 +52,8 @@ def read_novels(path=Path.cwd() / "texts" / "novels"):
         text = file_path.read_text(encoding="utf-8")
         rows.append({"text": text, "title": title, "author": author, "year": int(year)})
     df = pd.DataFrame(rows)
+    df = df.sort_values("year").reset_index(drop=True)
+
     return df
 
 
