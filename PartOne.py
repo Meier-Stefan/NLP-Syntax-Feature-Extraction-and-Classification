@@ -1,3 +1,4 @@
+from collections import Counter
 import nltk
 import spacy
 from pathlib import Path
@@ -101,7 +102,13 @@ def get_fks(df):
     return results
 
 
-#.. add functions for part (e) here
+def get_common_subjects(doc, n=10):
+    subjects = []
+    for token in doc:
+        if token.dep_ in ("nsubj", "nsubjpass") and not token.is_stop:
+            subjects.append(token.lemma_.lower())
+    counts = Counter(subjects)
+    return counts.most_common(n)
 
 
 
@@ -124,3 +131,10 @@ if __name__ == "__main__":
     print("\nType-token ratios:")
     for title, ttr in get_ttrs(df).items():
         print(f"  {title}: {ttr:.4f}")
+
+    print("\nMost common syntactic subjects:\n")
+    for _, row in df.iterrows():
+        subjects = get_common_subjects(row["doc"], n=10)
+        print(f"=== {row['title']} ===")
+        for word, count in subjects:
+            print(f"    {word}: {count}")
