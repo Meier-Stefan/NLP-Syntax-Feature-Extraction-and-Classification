@@ -1,4 +1,5 @@
 from collections import Counter
+import math
 import nltk
 import spacy
 from pathlib import Path
@@ -111,6 +112,35 @@ def get_common_subjects(doc, n=10):
     return counts.most_common(n)
 
 
+def get_he_verb_pmi(doc, n=10):
+    pairs = []
+    for token in doc:
+        if token.dep_ in ("nsubj", "nsubjpass") and token.head.pos_ == "VERB":
+            verb = token.head.lemma_.lower()
+            if not verb.isalpha():
+                continue
+            pairs.append((token.lemma_.lower(), verb))
+
+    N = len(pairs)
+    if N == 0:
+        return []
+
+    verb_counts = Counter(verb for _, verb in pairs)
+    he_count = sum(1 for s, _ in pairs if s == "he")
+    if he_count == 0:
+        return []
+
+    he_verb_counts = Counter(verb for s, verb in pairs if s == "he")
+    results = []
+    for verb, he_c in he_verb_counts.items():
+        v_c = verb_counts[verb]
+        pmi = math.log2((he_c * N) / (v_c * he_count))
+        results.append((verb, round(pmi, 4)))
+
+    results.sort(key=lambda x: x[1], reverse=True)
+    return results[:n]
+
+
 
 if __name__ == "__main__":
     novels_path = Path.cwd() / "texts" / "novels"
@@ -138,3 +168,10 @@ if __name__ == "__main__":
         print(f"=== {row['title']} ===")
         for word, count in subjects:
             print(f"    {word}: {count}")
+
+    print("\nVerbs with highest PMI with subject 'he':\n")
+    for _, row in df.iterrows():
+        verbs = get_he_verb_pmi(row["doc"], n=10)
+        print(f"=== {row['title']} ===")
+        for verb, pmi in verbs:
+            print(f"    {verb}: {pmi}")
